@@ -16,14 +16,17 @@ if sys.platform != 'win32':
     if "/usr/local/bin" not in exec_path:
         os.environ["PATH"] = os.pathsep.join(exec_path + ["/usr/local/bin"])
 
+# store source_buffer_id => WorksheetCommand
+Cache = {}
 
 class WorksheetCommand():
     def __init__(self, input_buf, output_buf):
         self.input_buf = vim.buffers[input_buf]
         self.output_buf = vim.buffers[output_buf]
+        self.load_settings()
+        Cache[input_buf] = self
 
     def run(self):
-        self.load_settings()
         try:
             language = self.get_language()
             default_def = self.get_repl_settings()
@@ -69,6 +72,7 @@ class WorksheetCommand():
                 input_buf[num] = None
 
     def make_sheet(self):
+        self.remove_previous_results()
         line = 0
         input_buf = self.input_buf
         while line < len(input_buf):
@@ -80,6 +84,7 @@ class WorksheetCommand():
               self.cleanup()
               break
             line += output.count('\n') + 1
+        self.cleanup()
 
     def insert(self, text, start):
         text = str(text)
