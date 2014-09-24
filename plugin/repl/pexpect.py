@@ -1461,8 +1461,6 @@ class spawnb(Iterator):
                     raise TIMEOUT ('Timeout exceeded in expect_any().')
                 # Still have time left, so read more data
                 c = self.read_nonblocking (self.maxread, timeout)
-                print('from pexpect')
-                print('get: ' + c)
                 freshlen = len(c)
                 time.sleep (0.0001)
                 incoming = incoming + c

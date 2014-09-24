@@ -93,7 +93,7 @@ class Repl():
         if self.should_ignore(input):
             return ReplResult()
         prefix = self.prefix
-        self.repl.send(re.sub("\t", " ", input))
+        self.repl.sendline(re.sub("\t", " ", input))
         index = self.repl.expect_list(self.prompt)
         if self.prompt[index] == pexpect.TIMEOUT:
             # Timeout

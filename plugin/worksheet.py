@@ -38,7 +38,6 @@ class WorksheetCommand():
             if filename is not None:
                 repl_def["cwd"] = os.path.dirname(filename)
             self.repl = repl.get_repl(language, repl_def)
-            print(self.repl.correspond('val a = 1'))
         except repl.ReplStartError as e:
             self.error(str(e))
             return
@@ -69,53 +68,33 @@ class WorksheetCommand():
                 output_buf[num] = None
                 input_buf[num] = None
 
-    # def ensure_trailing_newline(self):
-        # pass
-        # eof = self.input_buf[-1]
-        # if not eof.endswith('\n'):
-        #     self.insert("\n", len(self.input_buf))
-
-    def process_line(self, start):
-        line_text = self.input_buf[start]
-        if start != len(self.input_buf):
-            self.set_status("Sending 1 line to REPL.")
-            print(line_text)
-            ret = self.repl.correspond(line_text)
-            print(ret)
-        else:
-            self.cleanup()
-
-    def queue_thread(self, thread, start):
-        while self.handle_thread(thread, start):
-            print('waiting')
-            time.sleep(5)
-
-    def handle_thread(self, thread, next_start):
-        if thread.is_alive():
-            self.set_status("Waiting for REPL.")
-            return True
-        else:
-            self.handle_finished_thread(thread, next_start)
-            return False
-
-    def handle_finished_thread(self, thread, next_start):
-        result = thread.result
-        print(result)
-        self.insert(str(result), next_start)
-        next_start += len(result)
-        if not result.terminates:
-            self.process_line(next_start)
-        else:
-            self.cleanup()
+    def make_sheet(self):
+        line = 0
+        input_buf = self.input_buf
+        while line < len(input_buf):
+            source = input_buf[line]
+            ret = self.repl.correspond(source)
+            output = str(ret).strip()
+            self.insert(output, line)
+            if ret.terminates:
+              self.cleanup()
+              break
+            line += output.count('\n') + 1
 
     def insert(self, text, start):
         text = str(text)
-        lines = text.count('\n') - 1
-        self.output_buf.append(text, start)
-        self.input_buf.append('\n'*lines, start)
+        extra_lines = text.count('\n')
+        if extra_lines:
+            vim.command(
+                '{0} normal {1}o'.format(start, extra_lines),
+            )
+        print('the out put is: ' + text)
+        print('has extra_lines: ' + str(extra_lines))
+        for i, t in enumerate(text.split('\n')):
+          self.output_buf.append(t, start+i)
 
     def set_status(self, msg, key="Worksheet"):
-        print(key + ':' + msg)
+        vim.command('echo "' + key + ':' + msg+ '"')
 
     def error(self, msg):
         print(msg, file=sys.stderr)
@@ -127,15 +106,12 @@ class WorksheetCommand():
         except repl.ReplCloseError as e:
             self.error("Could not close the REPL:\n" + str(e))
 
-    def get_line(self, linenum):
-        return self.input_buf[linenum]
-
 
 class WorksheetEvalCommand(WorksheetCommand):
     def run(self):
         WorksheetCommand.run(self)
-        self.process_line(0)
-
+        self.make_sheet()
+        self.cleanup()
 
 class WorksheetClearCommand(WorksheetCommand):
     def run(self):

@@ -39,7 +39,7 @@ input_buf = int(vim.eval('inputBuf'))
 output_buf = int(vim.eval('outputBuf'))
 worksheet = WorksheetEvalCommand(input_buf, output_buf).run()
 EOF
-    set nomodifiable
+    " set nomodifiable
 endfunction
 
 command! Worksheet call s:worksheet_start()
