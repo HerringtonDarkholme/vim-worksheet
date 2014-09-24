@@ -26,7 +26,7 @@ class WorksheetCommand():
         self.load_settings()
         Cache[input_buf] = self
 
-    def run(self):
+    def prepare(self):
         try:
             language = self.get_language()
             default_def = self.get_repl_settings()
@@ -36,7 +36,7 @@ class WorksheetCommand():
             proj_def = project_repl_defs.\
                 get(language, repl_defs.get(language, {})).items()
             repl_def = dict(list(default_def) + list(proj_def))
-            self.prefix = repl_def.get('prefix')
+            repl_def['prefix'] = ''
             filename = self.input_buf.name
             if filename is not None:
                 repl_def["cwd"] = os.path.dirname(filename)
@@ -68,11 +68,12 @@ class WorksheetCommand():
         output_buf = self.output_buf
         for num, line in enumerate(output_buf):
             if len(line) and len(input_buf[num]) == 0:
-                output_buf[num] = None
                 input_buf[num] = None
+        output_buf[:] = None
 
     def make_sheet(self):
         self.remove_previous_results()
+        self.prepare()
         line = 0
         input_buf = self.input_buf
         while line < len(input_buf):
@@ -93,8 +94,6 @@ class WorksheetCommand():
             vim.command(
                 '{0} normal {1}o'.format(start, extra_lines),
             )
-        print('the out put is: ' + text)
-        print('has extra_lines: ' + str(extra_lines))
         for i, t in enumerate(text.split('\n')):
           self.output_buf.append(t, start+i)
 
@@ -110,14 +109,19 @@ class WorksheetCommand():
             self.repl.close()
         except repl.ReplCloseError as e:
             self.error("Could not close the REPL:\n" + str(e))
-
+    def end_session(self):
+        self.cleanup()
+        self.remove_previous_results()
+        bufnum = self.output_buf.number
+        vim.command('bd! %d' % bufnum)
+        del Cache[self.input_buf.number]
 
 class WorksheetEvalCommand(WorksheetCommand):
     def run(self):
-        WorksheetCommand.run(self)
+        WorksheetCommand.prepare(self)
         self.make_sheet()
         self.cleanup()
 
 class WorksheetClearCommand(WorksheetCommand):
     def run(self):
-        WorksheetCommand.run(self)
+        WorksheetCommand.prepare(self)

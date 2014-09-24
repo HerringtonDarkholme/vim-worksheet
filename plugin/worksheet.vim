@@ -25,34 +25,55 @@ exec s:pyfile . s:SourcePath . '/worksheet.py'
 
 function! s:worksheet_start()
     let inputBuf = bufnr('%')
+    "bind scrolling
     set scrollbind
+    "open new window rightside and
     rightbelow vnew
     vertical resize 50
     setlocal nonumber
     setlocal nowrap
     let outputBuf = bufnr('%')
     set scrollbind
+    " come back to source buffer
     wincmd h
 
 py<<EOF
 input_buf = int(vim.eval('inputBuf'))
 output_buf = int(vim.eval('outputBuf'))
-worksheet = WorksheetCommand(input_buf, output_buf).run()
+worksheet = WorksheetCommand(input_buf, output_buf)
 worksheet.make_sheet()
 EOF
-    " set nomodifiable
+
 endfunction
 
 function! s:worksheet_eval()
-
+    let inputBuf = bufnr('%')
 py<<EOF
 input_buf = int(vim.eval('inputBuf'))
-output_buf = int(vim.eval('outputBuf'))
-worksheet = WorksheetCommand(input_buf, output_buf).run()
-worksheet.make_sheet()
+worksheet = Cache.get(input_buf)
+if not worksheet:
+  print('No worksheet found for buffer')
+  vim.eval('return 1')
+else:
+  worksheet.make_sheet()
 EOF
-
 endfunction
 
-command! Worksheet call s:worksheet_start()
-nmap <Leader>ws :Worksheet<CR>
+function! s:worksheet_end()
+    let inputBuf = bufnr('%')
+py<<EOF
+input_buf = int(vim.eval('inputBuf'))
+worksheet = Cache.get(input_buf)
+if not worksheet:
+  print('No worksheet found for buffer')
+  vim.eval('return 1')
+else:
+  worksheet.end_session()
+EOF
+return 0
+endfunction
+
+command! WorksheetStart call s:worksheet_start()
+command! WorksheetEval call s:worksheet_eval()
+command! WorksheetEnd call s:worksheet_end()
+nmap <Leader>ws :WorksheetStart<CR>
