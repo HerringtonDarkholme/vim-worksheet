@@ -27,7 +27,7 @@ Currently it supports scala and js.
 `:WorksheetEnd`   close worksheet session and clean up
 
 
-**Shortcut**
+**Shortcut:**
 
 `<leader>ws` WorksheetStart
 
