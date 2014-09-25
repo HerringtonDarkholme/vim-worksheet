@@ -10,7 +10,7 @@ Installation
 
 add this line to your .vimrc
 
-`NeoBundle HerringtonDarkholme/vim-worksheet`
+`NeoBundle 'HerringtonDarkholme/vim-worksheet'`
 
 Supported Lang
 ===============
