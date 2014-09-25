@@ -2,7 +2,6 @@ from __future__ import print_function
 import vim
 import os
 import sys
-import time
 PY3K = sys.version_info >= (3, 0, 0)
 if PY3K:
     from . import repl
@@ -18,6 +17,7 @@ if sys.platform != 'win32':
 
 # store source_buffer_id => WorksheetCommand
 Cache = {}
+
 
 class WorksheetCommand():
     def __init__(self, input_buf, output_buf):
@@ -66,25 +66,30 @@ class WorksheetCommand():
     def remove_previous_results(self):
         input_buf = self.input_buf
         output_buf = self.output_buf
-        for num, line in enumerate(output_buf):
+        num = 0
+        for line in output_buf:
             if len(line) and len(input_buf[num]) == 0:
                 input_buf[num] = None
+            else:
+                num += 1
         output_buf[:] = None
 
     def make_sheet(self):
         self.remove_previous_results()
         self.prepare()
-        line = 0
         input_buf = self.input_buf
+        line = 0
         while line < len(input_buf):
             source = input_buf[line]
             ret = self.repl.correspond(source)
             output = str(ret).strip()
             self.insert(output, line)
             if ret.terminates:
-              self.cleanup()
-              break
+                self.cleanup()
+                break
             line += output.count('\n') + 1
+        # remove initial white line
+        self.output_buf[-1] = None
         self.cleanup()
 
     def insert(self, text, start):
@@ -95,20 +100,20 @@ class WorksheetCommand():
                 '{0} normal {1}o'.format(start, extra_lines),
             )
         for i, t in enumerate(text.split('\n')):
-          self.output_buf.append(t, start+i)
+            self.output_buf.append(t, start+i)
 
     def set_status(self, msg, key="Worksheet"):
-        vim.command('echo "' + key + ':' + msg+ '"')
+            vim.command('echo "' + key + ':' + msg + '"')
 
     def error(self, msg):
         print(msg, file=sys.stderr)
 
     def cleanup(self):
-        self.set_status('')
         try:
             self.repl.close()
         except repl.ReplCloseError as e:
             self.error("Could not close the REPL:\n" + str(e))
+
     def end_session(self):
         self.cleanup()
         self.remove_previous_results()
@@ -116,11 +121,13 @@ class WorksheetCommand():
         vim.command('bd! %d' % bufnum)
         del Cache[self.input_buf.number]
 
+
 class WorksheetEvalCommand(WorksheetCommand):
     def run(self):
         WorksheetCommand.prepare(self)
         self.make_sheet()
         self.cleanup()
+
 
 class WorksheetClearCommand(WorksheetCommand):
     def run(self):

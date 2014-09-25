@@ -44,6 +44,9 @@ worksheet = WorksheetCommand(input_buf, output_buf)
 worksheet.make_sheet()
 EOF
 
+    command-buffer WorksheetEval call s:worksheet_eval()
+    command-buffer WorksheetEnd call s:worksheet_end()
+    command-buffer WorksheetClean call s:worksheet_clean()
 endfunction
 
 function! s:worksheet_eval()
@@ -52,28 +55,46 @@ py<<EOF
 input_buf = int(vim.eval('inputBuf'))
 worksheet = Cache.get(input_buf)
 if not worksheet:
-  print('No worksheet found for buffer')
-  vim.eval('return 1')
+    print('No worksheet found for buffer')
+    vim.eval('return 1')
 else:
-  worksheet.make_sheet()
+    worksheet.make_sheet()
 EOF
 endfunction
 
 function! s:worksheet_end()
     let inputBuf = bufnr('%')
+
 py<<EOF
 input_buf = int(vim.eval('inputBuf'))
 worksheet = Cache.get(input_buf)
 if not worksheet:
-  print('No worksheet found for buffer')
-  vim.eval('return 1')
+    print('No worksheet found for buffer')
+    vim.eval('return 1')
 else:
-  worksheet.end_session()
+    worksheet.end_session()
 EOF
-return 0
+
+    delcommand WorksheetEval
+    delcommand WorksheetEnd
+    delcommand WorksheetClean
+    return 0
+endfunction
+
+function! s:worksheet_clean()
+    let inputBuf = bufnr('%')
+py<<EOF
+input_buf = int(vim.eval('inputBuf'))
+worksheet = Cache.get(input_buf)
+if not worksheet:
+    print('No worksheet found for buffer')
+    vim.eval('return 1')
+else:
+    worksheet.remove_previous_results()
+EOF
+    return 0
 endfunction
 
 command! WorksheetStart call s:worksheet_start()
-command! WorksheetEval call s:worksheet_eval()
-command! WorksheetEnd call s:worksheet_end()
+
 nmap <Leader>ws :WorksheetStart<CR>
