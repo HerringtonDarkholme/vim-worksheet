@@ -9,6 +9,8 @@ elif sys.platform.startswith('darwin'):
     PLATFORM = 'osx'
 elif sys.platform.startswith('linux'):
     PLATFORM = 'linux'
+elif sys.platform.startswith('cygwin'):
+    PLATFORM = 'linux'
 
 assert PLATFORM in ('windows', 'osx', 'linux')
 

@@ -68,6 +68,8 @@ class WorksheetCommand():
         output_buf = self.output_buf
         num = 0
         for line in output_buf:
+            if num >= len(input_buf):
+                break
             if len(line) and len(input_buf[num]) == 0:
                 input_buf[num] = None
             else:
