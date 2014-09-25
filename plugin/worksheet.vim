@@ -23,8 +23,18 @@ exec s:py . 'source_path = vim.eval("s:SourcePath")'
 exec s:py . 'sys.path.append(source_path)'
 exec s:pyfile . s:SourcePath . '/worksheet.py'
 
+" opend buffer
+let s:opend = {}
+
 function! s:worksheet_start()
     let inputBuf = bufnr('%')
+    if exists('s:opend['. inputBuf .']')
+        echo 'worksheet already started'
+        return 0
+    else
+        let s:opend[inputBuf] = 1
+    endif
+
     "bind scrolling
     set scrollbind
     "open new window rightside and
@@ -40,13 +50,13 @@ function! s:worksheet_start()
 py<<EOF
 input_buf = int(vim.eval('inputBuf'))
 output_buf = int(vim.eval('outputBuf'))
-worksheet = WorksheetCommand(input_buf, output_buf)
-worksheet.make_sheet()
+if not Cache.get(input_buf):
+    worksheet = WorksheetCommand(input_buf, output_buf)
+    worksheet.make_sheet()
+    vim.command('call s:worksheet_bind()')
+else:
+    vim.command('echo')
 EOF
-
-    command-buffer WorksheetEval call s:worksheet_eval()
-    command-buffer WorksheetEnd call s:worksheet_end()
-    command-buffer WorksheetClean call s:worksheet_clean()
 endfunction
 
 function! s:worksheet_eval()
@@ -64,21 +74,21 @@ endfunction
 
 function! s:worksheet_end()
     let inputBuf = bufnr('%')
-
+    if exists('s:opend['. inputBuf .']')
+        unlet s:opend[inputBuf]
+    else
+        echo 'No worksheet found for buffer'
+        return 1
+    endif
 py<<EOF
 input_buf = int(vim.eval('inputBuf'))
 worksheet = Cache.get(input_buf)
 if not worksheet:
     print('No worksheet found for buffer')
-    vim.eval('return 1')
 else:
     worksheet.end_session()
+    vim.command('call s:worksheet_unbind()')
 EOF
-
-    delcommand WorksheetEval
-    delcommand WorksheetEnd
-    delcommand WorksheetClean
-    return 0
 endfunction
 
 function! s:worksheet_clean()
@@ -88,13 +98,36 @@ input_buf = int(vim.eval('inputBuf'))
 worksheet = Cache.get(input_buf)
 if not worksheet:
     print('No worksheet found for buffer')
-    vim.eval('return 1')
 else:
     worksheet.remove_previous_results()
 EOF
     return 0
 endfunction
 
-command! WorksheetStart call s:worksheet_start()
+function! s:worksheet_bind()
+    command-buffer WorksheetEval call s:worksheet_eval()
+    command-buffer WorksheetEnd call s:worksheet_end()
+    command-buffer WorksheetClean call s:worksheet_clean()
+    nnoremap <buffer> <leader>wc :WorksheetClean<CR>
+    nnoremap <buffer> <leader>we :WorksheetEnd<CR>
+    augroup worksheetgroup
+        autocmd BufWritePre <buffer> WorksheetClean
+        autocmd BufWritePost <buffer> WorksheetEval
+        autocmd BufLeave <buffer> WorksheetEnd
+    augroup END
+endfunction
 
+function! s:worksheet_unbind()
+    delcommand WorksheetEval
+    delcommand WorksheetEnd
+    delcommand WorksheetClean
+    nunmap <buffer> <leader>wc
+    nunmap <buffer> <leader>we
+    augroup worksheetgroup
+        autocmd!
+    augroup END
+
+endfunction
+
+command WorksheetStart call s:worksheet_start()
 nmap <Leader>ws :WorksheetStart<CR>
