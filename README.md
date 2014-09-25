@@ -6,15 +6,28 @@ Add worksheet support to Vim.
 
 Installation
 ============
-NeoBundle Recommended
+[NeoBundle](https://github.com/Shougo/neobundle.vim) Recommended
 
 add this line to your .vimrc
 
 `NeoBundle HerringtonDarkholme/vim-worksheet`
 
+Supported Lang
+===============
+
+* Scala
+* Javascript
+* Ruby
+* PHP
+* Python
+
+**NOTICE**
+
+Python worksheet is whiteline sensitive.
+Try adding or removing extra new lines when it does not work.
+
 Usage
 ===========
-Currently it supports scala and js.
 
 **Command:**
 
