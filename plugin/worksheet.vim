@@ -39,7 +39,7 @@ function! s:worksheet_start()
     set scrollbind
     "open new window rightside and
     rightbelow vnew
-    vertical resize 50
+    vertical resize 40
     setlocal nonumber
     setlocal nowrap
     let outputBuf = bufnr('%')
