@@ -7,7 +7,6 @@ if PY3K:
     from . import repl
 else:
     import repl
-    import repl_setting
 
 if sys.platform != 'win32':
     # Make sure /usr/local/bin is on the path
@@ -15,8 +14,28 @@ if sys.platform != 'win32':
     if "/usr/local/bin" not in exec_path:
         os.environ["PATH"] = os.pathsep.join(exec_path + ["/usr/local/bin"])
 
+
+def compatible_dict(vim_dict):
+    # vim will pass int as string to python
+    def vbool(string):
+        return bool(int(string))
+
+    for key, value in vim_dict.items():
+        if key == 'timeout':
+            vim_dict[key] = int(value)
+        elif key == 'strip_echo':
+            if isinstance(value, dict):
+                vim_dict[key] = {k: vbool(v) for k, v in value.items()}
+            else:
+                vim_dict[key] = vbool(value)
+        elif isinstance(value, dict):
+            vim_dict[key] = compatible_dict(value)
+    return vim_dict
+
 # store source_buffer_id => WorksheetCommand
 Cache = {}
+default_setting = vim.eval('g:worksheet_repl_setting')
+default_setting = compatible_dict(default_setting)
 
 
 class WorksheetCommand():
@@ -47,7 +66,7 @@ class WorksheetCommand():
         self.remove_previous_results()
 
     def load_settings(self):
-        self.settings = repl_setting.default_setting
+        self.settings = default_setting
         self.timeout = self.settings.get('worksheet_timeout')
 
     def get_repl_settings(self):

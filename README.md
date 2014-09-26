@@ -44,6 +44,8 @@ Usage
 
 `<leader>ws` WorksheetStart
 
+`<leader><leader>` WorksheetEval
+
 `<leader>wc` WorksheetClean
 
 `<leader>we` WorksheetEnd

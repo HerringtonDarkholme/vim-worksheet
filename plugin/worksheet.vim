@@ -16,6 +16,10 @@ else
     let s:pyfile = 'pyfile '
 endif
 
+if !exists('g:worksheet_repl_setting')
+    call worksheet#repl_setting()
+endif
+
 " load python
 let s:SourcePath=expand('<sfile>:p:h')
 exec s:py . 'import sys, vim'
@@ -25,8 +29,15 @@ exec s:pyfile . s:SourcePath . '/worksheet.py'
 
 " opend buffer
 let s:opend = {}
+let s:langs = g:worksheet_repl_setting['worksheet_languages']
 
 function! s:worksheet_start()
+    let filetype = &filetype
+    if !has_key(s:langs, filetype)
+        echo 'Filetype is not supported!'
+        return 1
+    endif
+
     let inputBuf = bufnr('%')
     if exists('s:opend['. inputBuf .']')
         echo 'worksheet already started'
@@ -110,10 +121,10 @@ function! s:worksheet_bind()
     command-buffer WorksheetClean call s:worksheet_clean()
     nnoremap <buffer> <leader>wc :WorksheetClean<CR>
     nnoremap <buffer> <leader>we :WorksheetEnd<CR>
+    nnoremap <buffer> <leader><leader> :WorksheetEval<CR>
     augroup worksheetgroup
         autocmd BufWritePre <buffer> WorksheetClean
         autocmd BufWritePost <buffer> WorksheetEval
-        autocmd BufLeave <buffer> WorksheetEnd
     augroup END
 endfunction
 
@@ -123,6 +134,7 @@ function! s:worksheet_unbind()
     delcommand WorksheetClean
     nunmap <buffer> <leader>wc
     nunmap <buffer> <leader>we
+    nunmap <buffer> <leader><leader>
     augroup worksheetgroup
         autocmd!
     augroup END
