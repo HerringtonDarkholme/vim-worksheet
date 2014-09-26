@@ -53,6 +53,7 @@ function! s:worksheet_start()
     vertical resize 40
     setlocal nonumber
     setlocal nowrap
+    setlocal winfixwidth
     let outputBuf = bufnr('%')
     set scrollbind
     " come back to source buffer
@@ -125,6 +126,7 @@ function! s:worksheet_bind()
     augroup worksheetgroup
         autocmd BufWritePre <buffer> WorksheetClean
         autocmd BufWritePost <buffer> WorksheetEval
+        autocmd VimLeave <buffer> WorksheetEnd
     augroup END
 endfunction
 
