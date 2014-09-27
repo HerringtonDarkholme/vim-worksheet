@@ -182,7 +182,10 @@ class TIMEOUT(ExceptionPexpect):
 
 def _cast_bytes(s, enc):
     if isinstance(s, string_types):
-        return s.encode(enc)
+        if PY3K:
+            return s.encode(enc)
+        else:
+            return s.decode(enc).encode(enc)
     return s
 
 def _cast_unicode(s, enc):

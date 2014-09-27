@@ -7,6 +7,7 @@ if PY3K:
     from . import repl
 else:
     import repl
+    str = unicode
 
 if sys.platform != 'win32':
     # Make sure /usr/local/bin is on the path
