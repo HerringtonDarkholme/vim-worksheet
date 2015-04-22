@@ -16,10 +16,11 @@ Supported Lang
 ===============
 
 * Scala
-* Javascript
+* JavaScript
 * Ruby
 * PHP
 * Python
+* TypeScript (you need install [TSUN](https://github.com/HerringtonDarkholme/typescript-repl))
 
 **NOTICE**
 
