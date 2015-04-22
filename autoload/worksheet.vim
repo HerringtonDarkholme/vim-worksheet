@@ -72,6 +72,14 @@ function! worksheet#repl_setting()
     \            "env": {
     \                "windows": {"EMACS": 1}
     \            }
+    \        },
+    \        "typescript": {
+    \            "cmd": {
+    \                "windows": "tsun",
+    \                "linux": "tsun",
+    \                "osx": "tsun"
+    \            },
+    \            "prompt": ["> ", "\\.\\.+"]
     \        }
     \    }
     \}
